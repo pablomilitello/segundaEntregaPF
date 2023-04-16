@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import ProductManager from '../Dao/ProductManager.js';
+import ProductManager from '../Dao/ProductManagerMongo.js';
 import { __dirname } from '../utils.js';
 
 const path = __dirname + '/products.json';
