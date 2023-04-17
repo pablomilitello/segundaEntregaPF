@@ -24,7 +24,7 @@ router.get('/:cid', async (req, res) => {
   try {
     const { cid } = req.params;
     const cart = await cartManager.getCartById(cid);
-    if (cart.length == 0) {
+    if (!cart) {
       res.json({ message: 'Cart does not exist' });
     } else {
       res.status(201).json(cart);
@@ -49,6 +49,22 @@ router.post('/:cid/product/:pid', async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.toString() || 'It was not possible to add the product' });
+  }
+});
+
+router.delete('/:cid/product/:pid', async (req, res) => {
+  try {
+    const { cid, pid } = req.params;
+    const cart = await cartManager.getCartById(cid);
+    if (!cart) {
+      res.json({ message: 'Cart does not exist' });
+    }
+    cart.products = cart.products.filter(({ product }) => !product.equals(pid));
+    cart.save();
+    res.status(200).json(cart);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json('cart search error');
   }
 });
 

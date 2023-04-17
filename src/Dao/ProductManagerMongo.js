@@ -1,13 +1,24 @@
 import { productModel } from '../db/models/products.model.js';
 
 class ProductManager {
-  getProducts = async () => {
-    try {
-      const products = await productModel.find().lean();
-      return products;
-    } catch (error) {
-      console.log(error);
+  getProducts = async (limit, page, sortDir, category, availability) => {
+    const options = { page, limit };
+    if (sortDir) {
+      options.sort = { price: sortDir };
     }
+    const query = {};
+    if (category) {
+      query.category = { $regex: new RegExp(`${category}`, 'i') };
+    }
+
+    if (availability === 'true') {
+      query.stock = { $gt: 0 };
+    } else if (availability === 'false') {
+      query.stock = 0;
+    }
+
+    const products = await productModel.paginate(query, options);
+    return products;
   };
 
   getProductById = async (id) => {
@@ -23,6 +34,16 @@ class ProductManager {
     try {
       const newProduct = await productModel.create(product);
       return newProduct;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  aggregationFun = async () => {
+    try {
+      const response = await productModel.aggregate();
+
+      return response;
     } catch (error) {
       console.log(error);
     }

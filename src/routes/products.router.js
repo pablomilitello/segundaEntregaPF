@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import ProductManager from '../Dao/ProductManagerMongo.js';
-import { __dirname } from '../utils.js';
+import { __dirname, validateInteger, validateSort, validateBoolean } from '../utils.js';
 
 const path = __dirname + '/products.json';
 
@@ -10,19 +10,70 @@ const productManager = new ProductManager(path);
 
 router.get('/', async (req, res) => {
   try {
-    const { limit } = req.query;
-    const products = await productManager.getProducts();
+    const { limit = 10, page = 1, category, availability } = req.query;
 
-    if (!limit) {
-      res.status(201).json({ products });
-    } else {
-      let newLimit = parseInt(req.query.limit);
-      const filterProducts = products.filter((p) => p.id <= newLimit);
-      res.json({ filterProducts });
+    if (!validateInteger(limit, 1, 200)) {
+      res.status(400).json('wrong limit');
+      return;
     }
+    if (!validateInteger(page, 1, 10000)) {
+      res.status(400).json('wrong page');
+      return;
+    }
+
+    if (!validateBoolean(availability)) {
+      res.status(400).json('wrong availability');
+      return;
+    }
+
+    let { sort } = req.query;
+    sort = sort?.toLowerCase();
+    if (sort && !validateSort(sort)) {
+      res.status(400).json('wrong sort');
+      return;
+    }
+
+    const { docs, totalDocs, totalPages, pagingCounter, hasPrevPage, hasNextPage, prevPage, nextPage } =
+      await productManager.getProducts(parseInt(limit), parseInt(page), sort, category, availability);
+
+    let prevLink = null;
+    if (hasPrevPage) {
+      prevLink = `/api/products?limit=${limit}&page=${prevPage}&`;
+      if (category) {
+        prevLink += `query=${category}&`;
+      }
+      if (sort) {
+        prevLink += `sort=${sort}`;
+      }
+    }
+
+    let nextLink = null;
+    if (hasNextPage) {
+      nextLink = `/api/products?limit=${limit}&page=${nextPage}&`;
+      if (category) {
+        nextLink += `query=${category}&`;
+      }
+      if (sort) {
+        nextLink += `sort=${sort}`;
+      }
+    }
+
+    const response = {
+      status: 'success',
+      payload: docs,
+      totalPages,
+      prevPage,
+      nextPage,
+      page,
+      hasPrevPage,
+      hasNextPage,
+      prevLink,
+      nextLink,
+    };
+    res.status(200).json(response);
   } catch (error) {
     console.log(error);
-    res.status(500).json('product search error');
+    res.status(500).json({ status: 'error', message: 'product search error' });
   }
 });
 
