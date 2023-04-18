@@ -1,6 +1,6 @@
-import mongoose from 'mongoose';
-import { cartModel } from '../db/models/carts.model.js';
-import ProductManager from './ProductManagerMongo.js';
+import mongoose from "mongoose";
+import { cartModel } from "../db/models/carts.model.js";
+import ProductManager from "./ProductManagerMongo.js";
 
 class CartManager {
   getCartById = async (id) => {
@@ -10,6 +10,11 @@ class CartManager {
     } catch (error) {
       console.log(error);
     }
+  };
+
+  getCartByIdPopulated = async (id) => {
+    const cart = await cartModel.findOne({ _id: id }).populate('products.product');
+    return cart;
   };
 
   addCarts = async () => {
@@ -34,13 +39,55 @@ class CartManager {
 
       const productItem = cart.products.find((p) => p.product.equals(pid));
       if (!productItem) {
-        cart.products.push({ product: new mongoose.Types.ObjectId(pid), quantity: 1 });
+        cart.products.push({
+          product: new mongoose.Types.ObjectId(pid),
+          quantity: 1,
+        });
       } else {
         productItem.quantity++;
       }
       await cartModel.findOneAndUpdate({ _id: cid }, cart);
       return cart;
     }
+  };
+
+  deleteProductFromCart = async (cid, pid) => {
+    const cart = await this.getCartById(cid);
+    if (!cart) {
+      throw new Error("Error: Cart doesn't exist");
+    }
+    cart.products = cart.products.filter(({ product }) => !product.equals(pid));
+    cart.save();
+    return cart;
+  };
+
+  updateCart = async (id, products) => {
+    const cart = await cartModel.findOneAndUpdate(
+      { _id: id },
+      { products },
+      { new: true } // return the updated document instead of the old one
+    );
+    return cart;
+  };
+
+  updateCartProduct = async (id, pid, quantity) => {
+    const cart = await cartModel.findOne({ _id: id });
+    const product = cart.products.find(({ product }) => product.equals(pid));
+    if (product) {
+      product.quantity = quantity;
+      await cart.save();
+    }
+    return cart;
+  };
+
+  deleteAllProductsFromCart = async (id) => {
+    const cart = await this.getCartById(id);
+    if (!cart) {
+      throw new Error("Error: Cart doesn't exist");
+    }
+    cart.products = [];
+    cart.save();
+    return cart;
   };
 }
 

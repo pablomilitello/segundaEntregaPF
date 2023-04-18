@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
       return;
     }
 
-    if (!validateBoolean(availability)) {
+    if (availability && !validateBoolean(availability)) {
       res.status(400).json('wrong availability');
       return;
     }
@@ -33,14 +33,17 @@ router.get('/', async (req, res) => {
       return;
     }
 
-    const { docs, totalDocs, totalPages, pagingCounter, hasPrevPage, hasNextPage, prevPage, nextPage } =
+    const { docs, totalPages, hasPrevPage, hasNextPage, prevPage, nextPage } =
       await productManager.getProducts(parseInt(limit), parseInt(page), sort, category, availability);
 
     let prevLink = null;
     if (hasPrevPage) {
       prevLink = `/api/products?limit=${limit}&page=${prevPage}&`;
+      if (availability) {
+        prevLink += `availability=${availability}&`;
+      }
       if (category) {
-        prevLink += `query=${category}&`;
+        prevLink += `category=${category}&`;
       }
       if (sort) {
         prevLink += `sort=${sort}`;
@@ -50,8 +53,11 @@ router.get('/', async (req, res) => {
     let nextLink = null;
     if (hasNextPage) {
       nextLink = `/api/products?limit=${limit}&page=${nextPage}&`;
+      if (availability) {
+        prevLink += `availability=${availability}&`;
+      }
       if (category) {
-        nextLink += `query=${category}&`;
+        nextLink += `category=${category}&`;
       }
       if (sort) {
         nextLink += `sort=${sort}`;

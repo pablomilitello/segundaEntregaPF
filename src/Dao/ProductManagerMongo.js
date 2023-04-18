@@ -1,8 +1,9 @@
 import { productModel } from '../db/models/products.model.js';
+import { TRUE, FALSE } from '../utils.js';
 
 class ProductManager {
-  getProducts = async (limit, page, sortDir, category, availability) => {
-    const options = { page, limit };
+  getProducts = async (limit, page, sortDir, category, availability, lean = false) => {
+    const options = { page, limit, lean };
     if (sortDir) {
       options.sort = { price: sortDir };
     }
@@ -11,9 +12,9 @@ class ProductManager {
       query.category = { $regex: new RegExp(`${category}`, 'i') };
     }
 
-    if (availability === 'true') {
+    if (availability === TRUE) {
       query.stock = { $gt: 0 };
-    } else if (availability === 'false') {
+    } else if (availability === FALSE) {
       query.stock = 0;
     }
 

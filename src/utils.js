@@ -3,8 +3,11 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 export const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const ASC = 'asc';
-const DESC = 'desc';
+export const ASC = 'asc';
+export const DESC = 'desc';
+
+export const TRUE = 'true';
+export const FALSE = 'false';
 
 //Validation
 export const validateInteger = (input, lowerLimit, upperLimit) => {
@@ -19,5 +22,5 @@ export const validateSort = (input) => {
 
 //Validate Boolean
 export const validateBoolean = (input) => {
-  return input === 'true' || input === 'false';
+  return input === TRUE || input === FALSE;
 };

@@ -23,11 +23,11 @@ router.post('/', async (req, res) => {
 router.get('/:cid', async (req, res) => {
   try {
     const { cid } = req.params;
-    const cart = await cartManager.getCartById(cid);
+    const cart = await cartManager.getCartByIdPopulated(cid);
     if (!cart) {
       res.json({ message: 'Cart does not exist' });
     } else {
-      res.status(201).json(cart);
+      res.status(200).json(cart);
     }
   } catch (error) {
     console.log(error);
@@ -52,19 +52,77 @@ router.post('/:cid/product/:pid', async (req, res) => {
   }
 });
 
-router.delete('/:cid/product/:pid', async (req, res) => {
+router.delete("/:cid/products/:pid", async (req, res) => {
   try {
     const { cid, pid } = req.params;
     const cart = await cartManager.getCartById(cid);
     if (!cart) {
-      res.json({ message: 'Cart does not exist' });
+      res.status(400).json({ message: "Cart does not exist" });
     }
-    cart.products = cart.products.filter(({ product }) => !product.equals(pid));
-    cart.save();
-    res.status(200).json(cart);
+    const newCart = await cartManager.deleteProductFromCart(cid, pid);
+    res.status(200).json(newCart);
   } catch (error) {
     console.log(error);
-    res.status(500).json('cart search error');
+    res.status(500).json("cart search error");
+  }
+});
+
+router.put("/:cid", async (req, res) => {
+  try {
+    const { cid } = req.params;
+    const cart = await cartManager.getCartById(cid);
+    if (!cart) {
+      res.status(400).json({ message: "Cart does not exist" });
+    }
+    const products = req.body;
+    if (!Array.isArray(products)) {
+      res.status(400).json({ message: "Products must be an array" });
+    }
+    const newCart = await cartManager.updateCart(cid, products);
+    res.status(200).json(newCart);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("cart update error");
+  }
+});
+
+router.put("/:cid/products/:pid", async (req, res) => {
+  try {
+    const { cid, pid } = req.params;
+    const cart = await cartManager.getCartById(cid);
+    if (!cart) {
+      res.status(400).json({ message: "Cart does not exist" });
+    }
+
+    if (typeof req.body != "object") {
+      res.status(400).json({ message: "wrong body" });
+    }
+    const { quantity } = req.body;
+    if (!Number.isInteger(quantity)) {
+      res.status(400).json({ message: "wrong quantity" });
+    }
+
+    const newCart = await cartManager.updateCartProduct(cid, pid, quantity);
+    res.status(200).json(newCart);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("cart product update error");
+  }
+});
+
+router.delete("/:cid", async (req, res) => {
+  try {
+    const { cid } = req.params;
+    const cart = await cartManager.getCartById(cid);
+    if (!cart) {
+      res.status(400).json({ message: "Cart does not exist" });
+    }
+
+    const newCart = await cartManager.deleteAllProductsFromCart(cid);
+    res.status(200).json(newCart);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("cart products delete error");
   }
 });
 

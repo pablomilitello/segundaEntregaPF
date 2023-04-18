@@ -32,7 +32,7 @@ deleteProduct.addEventListener('click', (e) => {
   const element = e.target;
   const productId = element.getAttribute('data-id');
   if (element.className === 'delete') {
-    socketClient.emit('deleteProduct', parseInt(productId));
+    socketClient.emit('deleteProduct', productId);
     document.location.reload();
   }
 });

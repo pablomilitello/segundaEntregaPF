@@ -1,8 +1,8 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 var subSchema = mongoose.Schema(
   {
-    product: mongoose.SchemaTypes.ObjectId,
+    product: { type: mongoose.Schema.Types.ObjectId, ref: 'Products' },
     quantity: Number,
   },
   { _id: false }
